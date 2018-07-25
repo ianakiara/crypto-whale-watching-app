@@ -20,7 +20,7 @@ import numpy as np
 # modules added by contributors
 import time
 import threading
-from queue import Queue
+from multiprocessing import Queue
 
 # custom library
 from gdax_book import GDaxBook
@@ -32,7 +32,7 @@ desiredPairRefresh = 10000  # (in ms) The lower it is, the better is it regardin
 # js_extern = "https://rawgit.com/theimo1221/eth_python_tracker/patch-7/main.js" # just needed during development replace later
 js_extern = "https://cdn.rawgit.com/pmaji/crypto-whale-watching-app/master/main.js"
 noDouble = True  # if activatet each order is in case of beeing part of a ladder just shown once (just as a bubble, not as a ladder)
-SYMBOLS = {"USD": "$", "BTC": "₿", "EUR": "€", "GBP": "£"} # used for the tooltip
+SYMBOLS = {"USD": "$", "BTC": "B", "EUR": "E", "GBP": "L"} # used for the tooltip
 SIGNIFICANT = {"USD": 2, "BTC": 5, "EUR": 2, "GBP": 2} # used for rounding
 TBL_PRICE = 'price'
 TBL_VOLUME = 'volume'
@@ -83,10 +83,12 @@ class Pair:
 
 
 PAIRS = []  # Array containing all pairs
-E_GDAX = Exchange("GDAX", ["ETH-USD", "ETH-EUR", "ETH-BTC",
-                           "BTC-USD", "BTC-EUR", "BTC-GBP",
-                           "LTC-USD", "LTC-EUR", "LTC-BTC",
-                           "BCH-USD", "BCH-EUR", "BCH-BTC"], 0)
+# E_GDAX = Exchange("GDAX", ["ETH-USD", "ETH-EUR", "ETH-BTC",
+#                            "BTC-USD", "BTC-EUR", "BTC-GBP",
+#                            "LTC-USD", "LTC-EUR", "LTC-BTC",
+#                            "BCH-USD", "BCH-EUR", "BCH-BTC"], 0)
+
+E_GDAX = Exchange("GDAX", ["ETH-USD", "BTC-USD"], 0)
 for ticker in E_GDAX.ticker:
     cObj = Pair(E_GDAX.name, ticker)
     PAIRS.append(cObj)
@@ -239,7 +241,7 @@ def calc_data(pair, range=0.05, maxSize=32, minVolumePerc=0.01, ob_points=60):
     final_tbl['sqrt'] = np.sqrt(final_tbl[TBL_VOLUME])
     final_tbl['total_price'] = (((final_tbl['volume'] * final_tbl['price']).round(2)).apply(lambda x: "{:,}".format(x)))
 
-    # Following lines fix double drawing of orders in case it´s a ladder but bigger than 1%
+    # Following lines fix double drawing of orders in case it's a ladder but bigger than 1%
     if noDouble:
         bid_tbl = bid_tbl[(bid_tbl['volume'] < minVolume)]
         ask_tbl = ask_tbl[(ask_tbl['volume'] < minVolume)]
